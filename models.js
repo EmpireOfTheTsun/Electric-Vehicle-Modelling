@@ -199,6 +199,6 @@ var chart = new Chart(ctx, {
   // Configuration options go here
   options: {}
 });
-chart.canvas.parentNode.style.height = '1280px';
-chart.canvas.parentNode.style.width = '1280px';
+//chart.canvas.parentNode.style.height = '1000px';
+//chart.canvas.parentNode.style.width = '1000px';
 }
