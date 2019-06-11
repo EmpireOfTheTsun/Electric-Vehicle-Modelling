@@ -1,0 +1,56 @@
+---
+layout: default
+---
+
+<!DOCTYPE HTML>
+<html lang = "en">
+  <head>
+    <title>Electric Vehicle Electricity Consumption Model</title>
+    <meta charset = "UTF-8" />
+  </head>
+  <body>
+    <h1>DDemo</h1>
+    <form>
+      <fieldset>
+        <legend>Properties</legend>
+        <p>
+          <label>Number of Households</label>
+          <input type = "text"
+                 id = "houses"
+                 value = "100" />
+        </p>
+        <p>
+          <label>EV Penetration (%)</label>
+          <input type = "text"
+                  id = "penetration"
+                  value = "50" />
+        </p>
+        <p>
+          <label>Capacity (%)</label>
+          <input type = "text"
+                  id = "capacity"
+                  value = "120" />
+          <label>(Standard Capacity 100kWh)</label>
+        </p>
+        <p>
+          <label>Charging Rate (kWh)</label>
+          <input type = "text"
+                  id = "chargerate"
+                  value = "2" />
+        </p>
+        <p>
+          <label>Number of Trials</label>
+          <input type = "text"
+                  id = "iterations"
+                  value = "1" />
+        </p>
+      </fieldset>
+      <script>
+
+      </script>
+      <script type = "text/javascript" src = "models.js" ></script>
+
+    </form>
+    <button onclick="submit();" href="javascript:;">Submit</button>
+  </body>
+</html>
