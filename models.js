@@ -120,13 +120,14 @@ function carLeaving(car){
   return false; //car is not yet ready to leave
 }
 
+//DISCUSSION: Output successful chargings over time?
 function outputResults(electricityUsageOverTime){
   console.log("Electricity Usage: "+electricityUsageOverTime);
   console.log("Fully Charged Cars: "+successfulFuels);
   console.log("Mostly Charged Cars: "+partialSuccessfulFuels);
   console.log("Partly Charged Cars: "+unsuccessfulFuels);
   console.log("Uncharged Cars: "+failedFuels);
-
+  graph(electricityUsageOverTime);
 
 }
 
@@ -170,4 +171,34 @@ function gaussianRand() {
 //Note: pretty sure this is lower and upper bound inclusive
 function gaussianRandom(start, end) {
   return Math.floor(start + gaussianRand() * (end - start + 1));
+}
+
+//TODO: UPDATE
+function graph(electricityUsageOverTime){
+  var temp = 47;
+  var periodList = [];
+  for (temp; temp > -1; temp--){
+    periodList.push(temp);
+  }
+  var ctx = document.getElementById('myChart').getContext('2d');
+var chart = new Chart(ctx, {
+  // The type of chart we want to create
+  type: 'bar',
+
+  // The data for our dataset
+  data: {
+      labels: periodList,
+      datasets: [{
+          label: 'Energy Usage as Percentage of Capacity',
+          backgroundColor: 'rgb(255, 99, 132)',
+          borderColor: 'rgb(255, 99, 132)',
+          data: electricityUsageOverTime
+      }]
+  },
+
+  // Configuration options go here
+  options: {}
+});
+chart.canvas.parentNode.style.height = '1280px';
+chart.canvas.parentNode.style.width = '1280px';
 }
