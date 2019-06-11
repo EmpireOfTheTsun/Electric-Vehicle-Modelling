@@ -8,6 +8,12 @@ function submit(){
   chargeRate = chargeRate * 24 / numberOfPeriods; //scales hours to periods
   var iterations = document.getElementById('iterations').value;
   var carCount = Math.round(houses * penetration);
+
+  successfulFuels = 0; //resets outcome
+  partialSuccessfulFuels = 0;
+  unsuccessfulFuels = 0;
+  failedFuels = 0;
+
   buildModel(carCount, capacity, chargeRate, iterations);
 }
 
@@ -18,11 +24,15 @@ Cars are randomly generated with required electricity and time remaining, and ar
 They are taken from the list in index order
  */
 var minElecReq = 5; //Min & Max electrcity requirement per car
-var maxElecReq = 15;
+var maxElecReq = 10;
 var minWaitPeriod = 3; //NB this is NOT scaled to real time. Be careful if you change # periods!
 var maxWaitPeriod = 8;
 var numberOfPeriods = 48;
 var gaussianStrength = 20; //Higher = more gaussian distributed, but less performant.
+var successfulFuels = 0; //Fully fuelled
+var partialSuccessfulFuels = 0; // >50% fuelled
+var unsuccessfulFuels = 0; // 0<x<50% fuelled
+var failedFuels = 0; //not fuelled at all
 
 function buildModel(cars, capacity, chargeRate, iterations){
   var count;
@@ -45,14 +55,80 @@ function buildModel(cars, capacity, chargeRate, iterations){
     }
     console.log(carsList);
     console.log(carsTimeList);
+    runModel(carsList, carsTimeList, capacity, chargeRate);
   }
-  alert("Bees");
 }
 
+function runModel(carsList, carsTimeList, capacity, chargeRate){
+  var timeStep;
+  var currentCars = [];
+  var electricityUsageOverTime = [];
+  for (timeStep = 0; timeStep < numberOfPeriods; timeStep++){
+    var carsToAdd = carsTimeList[timeStep];
+    for (carsToAdd; carsToAdd > 0; carsToAdd--){
+      currentCars.push(carsList.shift());
+    }
+    var electricityPerCar = allocateElectricity(currentCars.length, capacity, chargeRate);
+    if(currentCars.length > 0){
+      console.log(currentCars[0]);
+    }
+
+    electricityUsageOverTime.push(electricityPerCar * currentCars.length);
+    var car;
+    var carCounter;
+    for (carCounter = currentCars.length-1; carCounter >= 0; carCounter--){ //allows splicing mid-loop
+      console.log("Bump");
+      car = currentCars[carCounter];
+      console.log(car.remainingElectricity);
+      console.log(electricityPerCar);
+      car.remainingElectricity -= electricityPerCar;
+      console.log(car.remainingElectricity);
+      car.timeRemaining--;
+      if(carLeaving(car)){
+        currentCars.splice(carCounter, 1); //removes this car if fuelled or out of time
+      }
+      console.log("Car"+car);
+    }
+  }
+  outputResults(electricityUsageOverTime);
+}
+
+//can swap this for other algorithms. Current is equal split
+function allocateElectricity(numCars, capacity, chargeRate){
+  return Math.min(chargeRate, (capacity / numCars));
+}
+
+//Checks if can be removed & if satisfied
+function carLeaving(car){
+  if (car.remainingElectricity <= 0){ //car is fully fuelled
+    successfulFuels++;
+    return true;
+  }
+  else if (car.timeRemaining <= 0){
+    var percentageLeft = car.remainingElectricity / car.electricityRequirement;
+    if (percentageLeft < 0.5){
+      partialSuccessfulFuels++; //car is mostly fuelled
+    }
+    else if (percentageLeft == 0){
+      failedFuels++; //car received no fuelling at all
+    }
+    else{
+      unsuccessfulFuels++; //car received less than half of fuel
+    }
+    return true;
+  }
+  return false; //car is not yet ready to leave
+}
+
+function outputResults(electricityUsageOverTime){
+  console.log("Electricity Usage: "+electricityUsageOverTime);
+  console.log("Fully Charged Cars: "+successfulFuels);
+  console.log("Mostly Charged Cars: "+partialSuccessfulFuels);
+  console.log("Partly Charged Cars: "+unsuccessfulFuels);
+  console.log("Uncharged Cars: "+failedFuels);
 
 
-
-
+}
 
 
 
@@ -63,7 +139,8 @@ function createCar(chargeRate){
   var car = new Object();
   car.timeRemaining = createTimeRequirement();
   var maxElectricityPossible = car.timeRemaining * chargeRate; //prevents needing more electricity than is possible
-  car.remainingElectricity = Math.max(createElectricityRequirement(), maxElectricityPossible);
+  car.electricityRequirement = Math.max(createElectricityRequirement(), maxElectricityPossible);
+  car.remainingElectricity = car.electricityRequirement;
   return car;
 }
 
