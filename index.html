@@ -8,6 +8,7 @@ layout: default
     <title>Electric Vehicle Electricity Consumption Modelling</title>
     <meta charset = "UTF-8" />
   </head>
+  <link href="stylesheet.css" rel="stylesheet" type="text/css">
   <body>
     <h1>Electric Vehicle Demo</h1>
     <form>
@@ -53,14 +54,15 @@ layout: default
     </form>
     <button onclick="submit();" href="javascript:;">Submit</button>
     <div>
-    <canvas id="myChart"></canvas>
+          <div id="canvas-holder"  style="height:40vh; width:60vw; float:left">
+    <canvas id="myChart" ></canvas>
     </div>
+        <div id="canvas-holder" style=" height:30vh; width:35vw; float:left; padding-top:6%">
+    <canvas id="pieChart" class="piechart"></canvas>
+    </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-    <script type="text/javascript">
-
-    </script>
-
-
-
+<!--<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>-->
   </body>
 </html>
