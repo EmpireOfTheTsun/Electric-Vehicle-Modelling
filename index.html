@@ -9,7 +9,7 @@ layout: default
     <meta charset = "UTF-8" />
   </head>
   <link href="stylesheet.css" rel="stylesheet" type="text/css">
-  <body>
+  <body onload="loaded()">
     <h1>Electric Vehicle Demo</h1>
     <form>
       <fieldset>
@@ -54,10 +54,10 @@ layout: default
     </form>
     <button onclick="submit();" href="javascript:;">Submit</button>
     <div>
-          <div id="canvas-holder"  style="height:40vh; width:60vw; float:left">
+          <div id="canvas-holder"  style="height:40%; width:60%; float:left">
     <canvas id="myChart" ></canvas>
     </div>
-        <div id="canvas-holder" style=" height:30vh; width:35vw; float:left; padding-top:6%">
+        <div id="canvas-holder" style=" height:30%; width:35%; float:left; padding-top:6%">
     <canvas id="pieChart" class="piechart"></canvas>
     </div>
     </div>

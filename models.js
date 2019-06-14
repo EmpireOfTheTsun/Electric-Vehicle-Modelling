@@ -22,6 +22,11 @@ function submit(){
   buildModel(carCount, capacity, chargeRate, iterations);
 }
 
+function loaded(){
+  graph([]);
+  pieChart([],[],[],[]);
+}
+
 /* THE MODEL
 This consists of a list of numbers determined by 'numberofPeriods' (48 is one per half hour period)
 The number at each period is the number of cars that will arrive at that point
