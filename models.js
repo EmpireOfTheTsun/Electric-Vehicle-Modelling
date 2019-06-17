@@ -1,3 +1,7 @@
+var imported = document.createElement("script");
+imported.src = "complexGraph.js";
+document.getElementsByTagName("head")[0].appendChild(imported);
+
 function submit(){
   //TODO: validation?
   var houses = document.getElementById("houses").value;
@@ -13,6 +17,9 @@ function submit(){
   partialSuccessfulFuels = 0;
   unsuccessfulFuels = 0;
   failedFuels = 0;
+  scaledBaseLoad = baseLoad(houses);
+  scaledMax = Math.max.apply(null,scaledBaseLoad);
+  maximumCapacity = (capacity / 100) * scaledMax;
 
   var count; //Removes old charts
   for (count = chartsList.length -1; count > -1; count--){
@@ -44,6 +51,9 @@ var partialSuccessfulFuels = 0; // >50% fuelled
 var unsuccessfulFuels = 0; // 0<x<50% fuelled
 var failedFuels = 0; //not fuelled at all
 var chartsList = [];
+var scaledBaseLoad = [];
+var scaledMax = 0;
+var maximumCapacity = 0;
 
 function buildModel(cars, capacity, chargeRate, iterations){
   var count;
@@ -79,7 +89,8 @@ function runModel(carsList, carsTimeList, capacity, chargeRate){
     for (carsToAdd; carsToAdd > 0; carsToAdd--){
       currentCars.push(carsList.shift());
     }
-    var electricityPerCar = allocateElectricity(currentCars.length, capacity, chargeRate);
+    var availableElec = maximumCapacity - scaledBaseLoad[timeStep];
+    var electricityPerCar = allocateElectricity(currentCars.length, availableElec, chargeRate);
 
 
     electricityUsageOverTime.push(electricityPerCar * currentCars.length);
@@ -98,8 +109,9 @@ function runModel(carsList, carsTimeList, capacity, chargeRate){
 }
 
 //can swap this for other algorithms. Current is equal split
-function allocateElectricity(numCars, capacity, chargeRate){
-  return Math.min(chargeRate, (capacity / numCars));
+function allocateElectricity(numCars, availableElec, chargeRate){
+  return chargeRate;
+  //return Math.min(chargeRate, (availableElec / numCars));
 }
 
 //Checks if can be removed & if satisfied
@@ -109,7 +121,6 @@ function carLeaving(car){
     return true;
   }
   else if (car.timeRemaining <= 0){
-    console.log("Car"+car.remainingElectricity);
     var percentageLeft = car.remainingElectricity / car.electricityRequirement;
     if (percentageLeft < 0.5){
       partialSuccessfulFuels++; //car is mostly fuelled
@@ -128,7 +139,17 @@ function carLeaving(car){
 //DISCUSSION: Output successful chargings over time?
 function outputResults(electricityUsageOverTime){
   console.log("Electricity Usage: "+electricityUsageOverTime);
-  graph(electricityUsageOverTime);
+  //shows where over Capacity
+  var count;
+  var overLimit = [];
+  for (count = 0; count < electricityUsageOverTime.length-1; count++){
+    var amountOver = (electricityUsageOverTime[count] + scaledBaseLoad[count]) - maximumCapacity; //-ve for all under capacity values
+    overLimit.push(Math.max(0, amountOver));
+    if(amountOver > 0){
+      electricityUsageOverTime[count] -= amountOver; //allows for stacked graph to show correct value
+    }
+  }
+  graph(electricityUsageOverTime, overLimit);
   pieChart(successfulFuels, partialSuccessfulFuels, unsuccessfulFuels, failedFuels);
 }
 
@@ -145,16 +166,26 @@ function createCar(chargeRate){
   return car;
 }
 
+//DISCUSSION: We said uniform btw 1-20, but can we do better?
 function createElectricityRequirement(){
-  return gaussianRandom(minElecReq, maxElecReq);
+  return Math.ceil(Math.random()*20000); //between 1 and 20 units requested
 }
 
+//TODO: Can improve this with proper distrib
 function createTimeRequirement(){
   return gaussianRandom(minWaitPeriod, maxWaitPeriod);
 }
 
+//Double the index as we only have 24 hour breakdown of charge start times
+//+1 half the time to get hour:30
 function createStartTime(){
-  return gaussianRandom(0, numberOfPeriods-1);
+  var probDistrib = [2.9,1.0,0.5,0.4,0.3,0.2,2.1,4.0,6.0,4.2,4.3,4.4,4.0,4.6,5.4,5.1,3.8,3.9,4.2,4.0,3.9,6.2,4.6,3.1];
+  var index = 2 * sample(probDistrib);
+  if (Math.random() > 0.5){
+    index++;
+  }
+  console.log("TIME:"+index);
+  return index;
 }
 
 //From https://stackoverflow.com/a/39187274
@@ -174,33 +205,12 @@ function gaussianRandom(start, end) {
 }
 
 //TODO: UPDATE
-function graph(electricityUsageOverTime){
-  var temp = 47;
-  var periodList = [];
-  for (temp; temp > -1; temp--){
-    periodList.push(temp);
-  }
-  var ctx = document.getElementById('myChart').getContext('2d');
-var chart = new Chart(ctx, {
-  // The type of chart we want to create
-  type: 'bar',
+function graph(electricityUsageOverTime, overLimit){
+  var periodList = ["00:00","00:30","01:00","01:30","02:00","02:30","03:00","03:30","04:00","04:30","05:00","05:30","06:00","06:30","07:00","07:30","08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00","20:30","21:00","21:30","22:00","22:30","23:00","23:30"];
 
-  // The data for our dataset
-  data: {
-      labels: periodList,
-      datasets: [{
-          label: 'Energy Usage as Percentage of Capacity',
-          backgroundColor: 'rgb(255, 99, 132)',
-          borderColor: 'rgb(255, 99, 132)',
-          data: electricityUsageOverTime
-      }]
-  },
-
-  // Configuration options go here
-  options: {}
-});
-//chart.canvas.parentNode.style.height = '30%';
-//chart.canvas.parentNode.style.width = '60%';
+  var chart = stackedLineChart(scaledBaseLoad, electricityUsageOverTime, periodList, overLimit);
+chart.canvas.parentNode.style.height = "900px";
+chart.canvas.parentNode.style.width = "900px";
 chartsList.push(chart);
 }
 
@@ -225,4 +235,29 @@ function pieChart(successfulFuels, partialSuccessfulFuels, unsuccessfulFuels, fa
 //chart.canvas.parentNode.style.height = '30%';
 //chart.canvas.parentNode.style.width = '40%';
 chartsList.push(chart);
+}
+
+function baseLoad(houses){
+  //x1000 for megawatt -> kilowatt conversion
+  var scale = 1000 * houses/1885; //1885 is the houses in the dataset
+  var meanPerHousehold = 580; //OR 536
+  //for the 1885 neighbourhood
+  var baseLoadTimes = [0.61,0.55,0.49,0.44,0.42,0.40,0.40,0.39,0.38,0.40,0.42,0.49,0.57,0.72,0.98,1.18,1.16,1.07,1.00,0.96,0.92,0.88,0.85,0.84,0.93,0.93,0.84,0.75,0.74,0.80,0.84,0.98,1.16,1.44,1.66,1.74,1.74,1.71,1.65,1.57,1.50,1.47,1.46,1.37,1.28,1.14,0.94,0.77];
+  var scaled = baseLoadTimes.map(function(x){ return x * scale; });
+  return scaled;
+}
+
+//From https://gist.github.com/brannondorsey/dc4cfe00d6b124aebd3277159dcbdb14
+// draw a discrete sample (index) from a probability distribution (an array of probabilities)
+// probs will be rescaled to sum to 1.0 if the values do not already
+function sample(probs) {
+    const sum = probs.reduce((a, b) => a + b, 0)
+    if (sum <= 0) throw Error('probs must sum to a value greater than zero')
+    const normalized = probs.map(prob => prob / sum)
+    const sample = Math.random()
+    let total = 0
+    for (let i = 0; i < normalized.length; i++) {
+        total += normalized[i]
+        if (sample < total) return i
+    }
 }
