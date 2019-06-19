@@ -142,7 +142,7 @@ function outputResults(electricityUsageOverTime){
   //shows where over Capacity
   var count;
   var overLimit = [];
-  for (count = 0; count < electricityUsageOverTime.length-1; count++){
+  for (count = 0; count < electricityUsageOverTime.length; count++){
     var amountOver = (electricityUsageOverTime[count] + scaledBaseLoad[count]) - maximumCapacity; //-ve for all under capacity values
     overLimit.push(Math.max(0, amountOver));
     if(amountOver > 0){
@@ -243,7 +243,9 @@ function baseLoad(houses){
   var meanPerHousehold = 580; //OR 536
   //for the 1885 neighbourhood
   var baseLoadTimes = [0.61,0.55,0.49,0.44,0.42,0.40,0.40,0.39,0.38,0.40,0.42,0.49,0.57,0.72,0.98,1.18,1.16,1.07,1.00,0.96,0.92,0.88,0.85,0.84,0.93,0.93,0.84,0.75,0.74,0.80,0.84,0.98,1.16,1.44,1.66,1.74,1.74,1.71,1.65,1.57,1.50,1.47,1.46,1.37,1.28,1.14,0.94,0.77];
-  var scaled = baseLoadTimes.map(function(x){ return x * scale; });
+  var scaled = baseLoadTimes.map(function(x){
+    x = x * (gaussianRand(0.95, 1.05));
+    return x * scale; });
   return scaled;
 }
 
