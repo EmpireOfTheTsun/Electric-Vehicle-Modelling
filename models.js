@@ -90,19 +90,49 @@ function runModel(carsList, carsTimeList, capacity, chargeRate){
       currentCars.push(carsList.shift());
     }
     var availableElec = maximumCapacity - scaledBaseLoad[timeStep];
-    var electricityPerCar = allocateElectricity(currentCars.length, availableElec, chargeRate);
-
-
-    electricityUsageOverTime.push(electricityPerCar * currentCars.length);
+    var electricityUsed = 0;
     var car;
-    var carCounter;
-    for (carCounter = currentCars.length-1; carCounter >= 0; carCounter--){ //allows splicing mid-loop
-      car = currentCars[carCounter];
-      car.remainingElectricity -= electricityPerCar;
-      car.timeRemaining--;
-      if(carLeaving(car)){
-        currentCars.splice(carCounter, 1); //removes this car if fuelled or out of time
+    if (false){ //replace with algorithmtype = valuedensity
+
+      //calculates value density for all cars
+      for (carCounter = 0 ; carCounter < currentCars.length; carCounter++){
+        car = currentCars[carCounter];
+        car.density = valueDensity(car.remainingElectricity, car.timeRemaining, chargeRate, car);
       }
+      //currentCars.sort((car1, car2) => (car1.density < car2.density) ? 1 : -1);
+      //Prioritises based on value density, or time remaining if tie.
+      currentCars.sort((car1, car2) => (car1.density < car2.density) ? -1 : (car1.density == car2.density) ? ((car1.timeRemaining > car2.timeRemaining) ? -1 : 1)  : 1);
+
+      console.log("NEWSET");
+      for (carCounter = currentCars.length-1; carCounter >= 0; carCounter--){ //allows splicing mid-loop
+        console.log(currentCars[carCounter].density + "t="+currentCars[carCounter].timeRemaining);
+
+        //electricityUsed += Math.min(electricityPerCar, car.remainingElectricity); //Car only uses electricity up to its capacity
+        //car.remainingElectricity -= electricityPerCar;
+
+        car.timeRemaining--;
+        if(carLeaving(car)){
+          currentCars.splice(carCounter, 1); //removes this car if fuelled or out of time
+        }
+      }
+
+
+
+      electricityUsageOverTime.push(electricityUsed);
+    }
+    else{
+      var electricityPerCar = allocateElectricity(currentCars.length, availableElec, chargeRate);
+      var carCounter;
+      for (carCounter = currentCars.length-1; carCounter >= 0; carCounter--){ //allows splicing mid-loop
+        car = currentCars[carCounter];
+        electricityUsed += Math.min(electricityPerCar, car.remainingElectricity); //Car only uses electricity up to its capacity
+        car.remainingElectricity -= electricityPerCar;
+        car.timeRemaining--;
+        if(carLeaving(car)){
+          currentCars.splice(carCounter, 1); //removes this car if fuelled or out of time
+        }
+      }
+      electricityUsageOverTime.push(electricityUsed);
     }
   }
   outputResults(electricityUsageOverTime);
@@ -110,8 +140,16 @@ function runModel(carsList, carsTimeList, capacity, chargeRate){
 
 //can swap this for other algorithms. Current is equal split
 function allocateElectricity(numCars, availableElec, chargeRate){
-  return chargeRate;
-  //return Math.min(chargeRate, (availableElec / numCars));
+  //return chargeRate;
+  return Math.min(chargeRate, (availableElec / numCars));
+}
+
+function valueDensity(amountNeeded, timeToDeparture, chargeRate, car){
+  if (timeToDeparture < 0){
+    console.log("wow!");
+  }
+  var denominator = (timeToDeparture+1) * chargeRate;
+  return amountNeeded / denominator;
 }
 
 //Checks if can be removed & if satisfied
@@ -125,7 +163,7 @@ function carLeaving(car){
     if (percentageLeft < 0.5){
       partialSuccessfulFuels++; //car is mostly fuelled
     }
-    else if (percentageLeft == 0){
+    else if (percentageLeft == 1){
       failedFuels++; //car received no fuelling at all
     }
     else{
@@ -160,6 +198,9 @@ function outputResults(electricityUsageOverTime){
 function createCar(chargeRate){
   var car = new Object();
   car.timeRemaining = createTimeRequirement();
+  if (car.timeRemaining <= 0){
+    console.log("wowee");
+  }
   var maxElectricityPossible = car.timeRemaining * chargeRate; //prevents needing more electricity than is possible
   car.electricityRequirement = Math.min(createElectricityRequirement(), maxElectricityPossible);
   car.remainingElectricity = car.electricityRequirement;
@@ -168,7 +209,7 @@ function createCar(chargeRate){
 
 //DISCUSSION: We said uniform btw 1-20, but can we do better?
 function createElectricityRequirement(){
-  return Math.ceil(Math.random()*20000); //between 1 and 20 units requested
+  return 9 + Math.ceil(Math.random()*11); //between 11 and 20 units
 }
 
 //TODO: Can improve this with proper distrib
@@ -184,7 +225,6 @@ function createStartTime(){
   if (Math.random() > 0.5){
     index++;
   }
-  console.log("TIME:"+index);
   return index;
 }
 
@@ -244,7 +284,8 @@ function baseLoad(houses){
   //for the 1885 neighbourhood
   var baseLoadTimes = [0.61,0.55,0.49,0.44,0.42,0.40,0.40,0.39,0.38,0.40,0.42,0.49,0.57,0.72,0.98,1.18,1.16,1.07,1.00,0.96,0.92,0.88,0.85,0.84,0.93,0.93,0.84,0.75,0.74,0.80,0.84,0.98,1.16,1.44,1.66,1.74,1.74,1.71,1.65,1.57,1.50,1.47,1.46,1.37,1.28,1.14,0.94,0.77];
   var scaled = baseLoadTimes.map(function(x){
-    x = x * (gaussianRand(0.95, 1.05));
+    var noiseFactor = 0.90 + (gaussianRand(0, 20) / 10);
+    x = x * noiseFactor;
     return x * scale; });
   return scaled;
 }
