@@ -100,7 +100,6 @@ function runModel(carsList, carsTimeList, capacity, chargeRate){
         car = currentCars[carCounter];
         car.density = valueDensity(car.remainingElectricity, car.timeRemaining, chargeRate, car).toFixed(4);
       }
-      //currentCars.sort((car1, car2) => (car1.density < car2.density) ? 1 : -1);
       //Prioritises based on value density, or time remaining if tie.
       currentCars.sort((car1, car2) => (car1.density < car2.density) ? -1 : (car1.density == car2.density) ? ((car1.timeRemaining > car2.timeRemaining) ? 1 : -1)  : 1);
 
