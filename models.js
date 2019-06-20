@@ -79,10 +79,6 @@ function buildModel(cars, capacity, chargeRate, iterations){
   for (count = 0; count < iterations; count++){
     console.log("Iteration:"+count+1);
     var carCount;
-    var carsList = [];
-    for(carCount = 0; carCount < cars; carCount++){
-      carsList.push(createCar(chargeRate));
-    }
     carCount = 0;
     var timeCount;
     var carsTimeList = []
@@ -93,13 +89,12 @@ function buildModel(cars, capacity, chargeRate, iterations){
       period = createStartTime();
       carsTimeList[period]++;
     }
-    console.log(carsList);
     console.log(carsTimeList);
-    runModel(carsList, carsTimeList, capacity, chargeRate);
+    runModel(carsTimeList, capacity, chargeRate);
   }
 }
 
-function runModel(carsList, carsTimeList, capacity, chargeRate){
+function runModel(carsTimeList, capacity, chargeRate){
   var timeStep;
   var currentCars = [];
   var electricityUsageOverTime = [];
@@ -108,7 +103,7 @@ function runModel(carsList, carsTimeList, capacity, chargeRate){
   for (timeStep = 0; timeStep < numberOfPeriods; timeStep++){
     var carsToAdd = carsTimeList[timeStep];
     for (carsToAdd; carsToAdd > 0; carsToAdd--){
-      car = carsList.shift();
+      car = createCar(chargeRate, timeStep-12); //counteract hours
       car.timeArrived = timeStep;
       currentCars.push(car);
     }
@@ -230,9 +225,9 @@ function getScaledBaseLoad(count){
   return scaledBaseLoad[count];
 }
 
-function createCar(chargeRate){
+function createCar(chargeRate, timeStep){
   var car = new Object();
-  car.timeRemaining = createTimeRequirement();
+  car.timeRemaining = createTimeRequirement(timeStep);
   var maxElectricityPossible = car.timeRemaining * chargeRate; //prevents needing more electricity than is possible
   car.electricityRequirement = Math.min(createElectricityRequirement(), maxElectricityPossible);
   car.remainingElectricity = car.electricityRequirement;
@@ -245,23 +240,36 @@ function createElectricityRequirement(){
 }
 
 //TODO: Can improve this with proper distrib
-function createTimeRequirement(){
+function createTimeRequirement(count){
+  if (count < 0){
+    count += scaledBaseLoad.length;
+  }
+  if (count >= scaledBaseLoad.length){
+    count -= scaledBaseLoad.length;;
+  }
   if (Math.random() < 0.5){ //Creates a 'short wait' or 'overnight weight' with equal distrib
-
+    return gaussianRandom(2, 6);
   }
   else{
-
+    var distrib = [16,14,12,12,10,10,10,14,48,46,46,44,40,38,36,34,32,30,28,26,24,22,20,18];
+    count = Math.floor(count/2);
+    maxTime = distrib[count];
+    return gaussianRandom(maxTime-8, maxTime); //Avg spread of 4 hours, or 8 periods
   }
-  return gaussianRandom(minWaitPeriod, maxWaitPeriod);
 }
 
 //Double the index as we only have 24 hour breakdown of charge start times
 //+1 half the time to get hour:30
 function createStartTime(){
   //NB assume 6pm-6am 36 hours later, so 1/6th come before, 1/6th come after
-                                              //12am                                                                                          //12am
-  var probDistrib = [4.2,4.0,3.9,6.2,4.6,3.1,2.9,1.0,0.5,0.4,0.3,0.2,2.1,4.0,6.0,4.2,4.3,4.4,4.0,4.6,5.4,5.1,3.8,3.9,4.2,4.0,3.9,6.2,4.6,3.1,2.9,1.0,0.5,0.4,0.3,0.2];
-  var index = 2 * sample(probDistrib);
+    var timeDistrib = [0.36,0.22,0.17,0.11,0.1,0.07, //6pm-11pm day before
+            0.02,0.01,0.01,0.01,0.01,0.01,0.01, //12-6
+            0.03,0.05,0.12,0.09,0.09,0.11, //7-12
+            0.12,0.15,0.11,0.17,0.22,0.36, //1-6
+            0.22,0.17,0.11,0.1,0.07, //7-11
+            0.02,0.01,0.01,0.01,0.01,0.01]; //12am-6am (excl.) day after
+  //[4.2,4.0,3.9,6.2,4.6,3.1,2.9,1.0,0.5,0.4,0.3,0.2,2.1,4.0,6.0,4.2,4.3,4.4,4.0,4.6,5.4,5.1,3.8,3.9,4.2,4.0,3.9,6.2,4.6,3.1,2.9,1.0,0.5,0.4,0.3,0.2]; OLD DISTRIB
+  var index = 2 * sample(timeDistrib);
   if (Math.random() > 0.5){
     index++;
   } //TODO: Test!
