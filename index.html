@@ -39,16 +39,20 @@ layout: default
                   id = "chargerate"
                   value = "5" />
         </p>
-        <p>
+        <button type="button" onclick="toggleAdvanced();" href="javascript:;">Show/Hide Advanced</button>
+        <p id="iterationsBox" style="display: none">
           <label>Number of Trials</label>
           <input type = "text"
                   id = "iterations"
                   value = "1" />
         </p>
+        <p id="threshBox" style="display: none">
+          <label>Partial/Mostly Charged Threshold (%)</label>
+          <input type = "text"
+                  id = "thresh"
+                  value = "50" />
+        </p>
       </fieldset>
-      <script>
-
-      </script>
       <script type = "text/javascript" src = "models.js" ></script>
       <script src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
     </form>

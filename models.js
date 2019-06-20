@@ -2,16 +2,33 @@ var imported = document.createElement("script");
 imported.src = "complexGraph.js";
 document.getElementsByTagName("head")[0].appendChild(imported);
 
+function toggleAdvanced(){
+  var iterations = document.getElementById('iterationsBox');
+  var thresh = document.getElementById('threshBox');
+  if (iterations.style.display == "block"){
+    iterations.style.display = "none";
+  }
+  else{iterations.style.display = "block";}
+
+  if (thresh.style.display == "block"){
+    thresh.style.display = "none";
+  }
+  else{thresh.style.display = "block";}
+
+  //DISCUSSION: should 0.05 -> 0? 0.99 -> 1?
+}
+
 function submit(){
-  //TODO: validation?
   var houses = document.getElementById("houses").value;
   var penetration = document.getElementById('penetration').value;
   penetration = penetration / 100;
   var capacity = document.getElementById('capacity').value;
   var chargeRate = document.getElementById('chargerate').value;
-  chargeRate = chargeRate * 24 / numberOfPeriods; //scales hours to periods
+  chargeRate = chargeRate * 36 / numberOfPeriods; //scales hours to periods
   var iterations = document.getElementById('iterations').value;
-  var carCount = Math.round(houses * penetration);
+  var carCount = Math.round(houses * penetration * 1.5); //*1/5 because adding another 6h before and after model. It's not incredibly precise but it doesn't have to be
+  pieChartThreshold = 1 - (document.getElementById('thresh').value / 100);
+
 
   successfulFuels = 0; //resets outcome
   partialSuccessfulFuels = 0;
@@ -44,7 +61,7 @@ var minElecReq = 5; //Min & Max electrcity requirement per car
 var maxElecReq = 10;
 var minWaitPeriod = 3; //NB this is NOT scaled to real time. Be careful if you change # periods!
 var maxWaitPeriod = 8;
-var numberOfPeriods = 48;
+var numberOfPeriods = 72; //36 hours
 var gaussianStrength = 20; //Higher = more gaussian distributed, but less performant.
 var successfulFuels = 0; //Fully fuelled TODO: These may have to be local
 var partialSuccessfulFuels = 0; // >50% fuelled
@@ -54,6 +71,8 @@ var chartsList = [];
 var scaledBaseLoad = [];
 var scaledMax = 0;
 var maximumCapacity = 0;
+var pieChartThreshold = 50;
+
 
 function buildModel(cars, capacity, chargeRate, iterations){
   var count;
@@ -84,16 +103,20 @@ function runModel(carsList, carsTimeList, capacity, chargeRate){
   var timeStep;
   var currentCars = [];
   var electricityUsageOverTime = [];
+  var car;
+
   for (timeStep = 0; timeStep < numberOfPeriods; timeStep++){
     var carsToAdd = carsTimeList[timeStep];
     for (carsToAdd; carsToAdd > 0; carsToAdd--){
-      currentCars.push(carsList.shift());
+      car = carsList.shift();
+      car.timeArrived = timeStep;
+      currentCars.push(car);
     }
-    var availableElec = maximumCapacity - scaledBaseLoad[timeStep];
+    var baseLoadUsage = getScaledBaseLoad(timeStep-12); //-12 to counteract the first 6 hours
+    var availableElec = maximumCapacity - baseLoadUsage;
     var electricityUsed = 0;
-    var car;
     var carCounter;
-    if (true){ //replace with algorithmtype = valuedensity
+    if (true){ //TODO replace with algorithmtype = valuedensity
 
       //calculates value density for all cars
       for (carCounter = currentCars.length-1; carCounter >= 0; carCounter--){
@@ -153,19 +176,24 @@ function valueDensity(amountNeeded, timeToDeparture, chargeRate, car){
 function carLeaving(car){
   car.timeRemaining--;
   if (car.remainingElectricity <= 0){ //car is fully fuelled
-    successfulFuels++;
+    if (car.timeArrived > 12 && car.timeArrived < 60){
+      successfulFuels++;
+    }
     return true;
   }
   else if (car.timeRemaining <= 0){
-    var percentageLeft = car.remainingElectricity / car.electricityRequirement;
-    if (percentageLeft < 0.5){
-      partialSuccessfulFuels++; //car is mostly fuelled
-    }
-    else if (percentageLeft == 1){
-      failedFuels++; //car received no fuelling at all
-    }
-    else{
-      unsuccessfulFuels++; //car received less than half of fuel
+    if (car.timeArrived > 12 && car.timeArrived < 60){
+
+      var percentageLeft = car.remainingElectricity / car.electricityRequirement;
+      if (percentageLeft < pieChartThreshold){
+        partialSuccessfulFuels++; //car is mostly fuelled
+      }
+      else if (percentageLeft == 1){
+        failedFuels++; //car received no fuelling at all
+      }
+      else{
+        unsuccessfulFuels++; //car received less than half of fuel
+      }
     }
     return true;
   }
@@ -174,12 +202,15 @@ function carLeaving(car){
 
 //DISCUSSION: Output successful chargings over time?
 function outputResults(electricityUsageOverTime){
+  //TODO: TRUNC
+  electricityUsageOverTime.splice(0, 12);
+  electricityUsageOverTime.splice(electricityUsageOverTime.length-12, 12);
   console.log("Electricity Usage: "+electricityUsageOverTime);
   //shows where over Capacity
   var count;
   var overLimit = [];
   for (count = 0; count < electricityUsageOverTime.length; count++){
-    var amountOver = (electricityUsageOverTime[count] + scaledBaseLoad[count]) - maximumCapacity; //-ve for all under capacity values
+    var amountOver = (electricityUsageOverTime[count] + getScaledBaseLoad(count)) - maximumCapacity; //-ve for all under capacity values
     overLimit.push(Math.max(0, amountOver));
     if(amountOver > 0){
       electricityUsageOverTime[count] -= amountOver; //allows for stacked graph to show correct value
@@ -189,10 +220,16 @@ function outputResults(electricityUsageOverTime){
   pieChart(successfulFuels, partialSuccessfulFuels, unsuccessfulFuels, failedFuels);
 }
 
+function getScaledBaseLoad(count){
+  if (count < 0){
+    count += scaledBaseLoad.length;
+  }
+  if (count >= scaledBaseLoad.length){
+    count -= scaledBaseLoad.length;;
+  }
+  return scaledBaseLoad[count];
+}
 
-
-//NB: TODO: these two parameters may be shortened based on how much time is remaining by the time they enter the simulation
-//DISCUSS: Cars that would normally be easily satisfied (low req, long wait time) can be made hard if they come late. Solution?
 function createCar(chargeRate){
   var car = new Object();
   car.timeRemaining = createTimeRequirement();
@@ -209,17 +246,25 @@ function createElectricityRequirement(){
 
 //TODO: Can improve this with proper distrib
 function createTimeRequirement(){
+  if (Math.random() < 0.5){ //Creates a 'short wait' or 'overnight weight' with equal distrib
+
+  }
+  else{
+
+  }
   return gaussianRandom(minWaitPeriod, maxWaitPeriod);
 }
 
 //Double the index as we only have 24 hour breakdown of charge start times
 //+1 half the time to get hour:30
 function createStartTime(){
-  var probDistrib = [2.9,1.0,0.5,0.4,0.3,0.2,2.1,4.0,6.0,4.2,4.3,4.4,4.0,4.6,5.4,5.1,3.8,3.9,4.2,4.0,3.9,6.2,4.6,3.1];
+  //NB assume 6pm-6am 36 hours later, so 1/6th come before, 1/6th come after
+                                              //12am                                                                                          //12am
+  var probDistrib = [4.2,4.0,3.9,6.2,4.6,3.1,2.9,1.0,0.5,0.4,0.3,0.2,2.1,4.0,6.0,4.2,4.3,4.4,4.0,4.6,5.4,5.1,3.8,3.9,4.2,4.0,3.9,6.2,4.6,3.1,2.9,1.0,0.5,0.4,0.3,0.2];
   var index = 2 * sample(probDistrib);
   if (Math.random() > 0.5){
     index++;
-  }
+  } //TODO: Test!
   return index;
 }
 
@@ -239,14 +284,13 @@ function gaussianRandom(start, end) {
   return Math.floor(start + gaussianRand() * (end - start + 1));
 }
 
-//TODO: UPDATE
 function graph(electricityUsageOverTime, overLimit){
   var periodList = ["00:00","00:30","01:00","01:30","02:00","02:30","03:00","03:30","04:00","04:30","05:00","05:30","06:00","06:30","07:00","07:30","08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00","20:30","21:00","21:30","22:00","22:30","23:00","23:30"];
 
   var chart = stackedLineChart(scaledBaseLoad, electricityUsageOverTime, periodList, overLimit);
-chart.canvas.parentNode.style.height = "900px";
-chart.canvas.parentNode.style.width = "900px";
-chartsList.push(chart);
+  chart.canvas.parentNode.style.height = "900px";
+  chart.canvas.parentNode.style.width = "900px";
+  chartsList.push(chart);
 }
 
 function pieChart(successfulFuels, partialSuccessfulFuels, unsuccessfulFuels, failedFuels){
