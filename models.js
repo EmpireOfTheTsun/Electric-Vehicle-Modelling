@@ -18,6 +18,10 @@ function toggleAdvanced(){
   //DISCUSSION: should 0.05 -> 0? 0.99 -> 1?
 }
 
+function view(algorithmType){
+  //TODO
+}
+
 function submit(){
   var houses = document.getElementById("houses").value;
   var penetration = document.getElementById('penetration').value;
@@ -72,7 +76,12 @@ var scaledBaseLoad = [];
 var scaledMax = 0;
 var maximumCapacity = 0;
 var pieChartThreshold = 50;
-
+var resultsGreedyLine = [];
+var resultsGreedyPie = [];
+var resultsEqualLine = [];
+var resultsEqualPie = [];
+var resultsDensityLine = []; //TODO: USE ME
+var resultsDensityPie = [];
 
 function buildModel(cars, capacity, chargeRate, iterations){
   var count;
@@ -81,7 +90,8 @@ function buildModel(cars, capacity, chargeRate, iterations){
     var carCount;
     carCount = 0;
     var timeCount;
-    var carsTimeList = []
+    var carsList = [];
+    var carsTimeList = [];
     for (timeCount = 0; timeCount < numberOfPeriods; timeCount++){
       carsTimeList.push(0);
     }
@@ -89,12 +99,25 @@ function buildModel(cars, capacity, chargeRate, iterations){
       period = createStartTime();
       carsTimeList[period]++;
     }
+    for(carCount = 0; carCount < carsTimeList.length; carCount++){
+      for (temp = 0; temp < carsTimeList[carCount]; temp++)
+        var car = createCar(chargeRate, carsTimeList[carCount]); //TODO TEST ME
+        carsList.push(car);
+    }
     console.log(carsTimeList);
-    runModel(carsTimeList, capacity, chargeRate);
+
+    var algorithmType;
+    for(algorithmType = 0; algorithmType < 3; algorithmType++){
+      var carsListClone = JSON.parse(JSON.stringify(carsList));
+      console.log("CLONED");
+      console.log(carsListClone); //TODO CHECK OK
+      runModel(carsTimeList, capacity, chargeRate, carsListClone, algorithmType);
+    }
+
   }
 }
 
-function runModel(carsTimeList, capacity, chargeRate){
+function runModel(carsTimeList, capacity, chargeRate, carsList){
   var timeStep;
   var currentCars = [];
   var electricityUsageOverTime = [];
@@ -103,15 +126,13 @@ function runModel(carsTimeList, capacity, chargeRate){
   for (timeStep = 0; timeStep < numberOfPeriods; timeStep++){
     var carsToAdd = carsTimeList[timeStep];
     for (carsToAdd; carsToAdd > 0; carsToAdd--){
-      car = createCar(chargeRate, timeStep-12); //counteract hours
-      car.timeArrived = timeStep;
-      currentCars.push(car);
+      currentCars.push(carsList.shift());
     }
     var baseLoadUsage = getScaledBaseLoad(timeStep-12); //-12 to counteract the first 6 hours
     var availableElec = maximumCapacity - baseLoadUsage;
     var electricityUsed = 0;
     var carCounter;
-    if (true){ //TODO replace with algorithmtype = valuedensity
+    if (true){ //TODO replace with algorithmtype = 1,2,3
 
       //calculates value density for all cars
       for (carCounter = currentCars.length-1; carCounter >= 0; carCounter--){
@@ -226,10 +247,11 @@ function getScaledBaseLoad(count){
 
 function createCar(chargeRate, timeStep){
   var car = new Object();
-  car.timeRemaining = createTimeRequirement(timeStep);
+  car.timeRemaining = createTimeRequirement(timeStep-12);
   var maxElectricityPossible = car.timeRemaining * chargeRate; //prevents needing more electricity than is possible
   car.electricityRequirement = Math.min(createElectricityRequirement(), maxElectricityPossible);
   car.remainingElectricity = car.electricityRequirement;
+  car.timeArrived = timeStep;
   return car;
 }
 
