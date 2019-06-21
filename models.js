@@ -168,7 +168,7 @@ function averageResults(algorithmType){
   var avgLineResult =[elecUsageList, overLimitList];
   var avgPieResult = [Math.round(avgSuccess/sum), Math.round(avgPartial/sum), Math.round(avgUnsuccess/sum), Math.round(avgFail/sum)];
 
-  console.log("Algo"+algorithmType+" Pie="+sum);
+  console.log("Algo"+algorithmType+" Pie="+sum*100);
 
   resultsLine[algorithmType] = avgLineResult;
   resultsPie[algorithmType] = avgPieResult;
@@ -231,13 +231,13 @@ function runModel(carsTimeList, capacity, chargeRate, carsList, algorithmType){
       electricityUsageOverTime.push(electricityUsed);
     }
   }
-  // var carCount;
-  // for (carCount = 0; carCount < currentCars.length; carCount++){
-  //   console.log("TEST");
-  //   var car = currentCars[carCount];
-  //   car.timeRemaining = 0;
-  //   carLeaving(car);
-  // }
+  var carCount;
+  for (carCount = 0; carCount < currentCars.length; carCount++){
+    console.log("TEST");
+    var car = currentCars[carCount];
+    car.timeRemaining = 0;
+    carLeaving(car);
+  }
   outputResults(electricityUsageOverTime);
 }
 
