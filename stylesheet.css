@@ -1,10 +1,13 @@
 .bigchart {
-
+position:static;
 }
 
 .piechart{
-border-color:red
-  padding-top: calc(12%);
+position:static;
 }
   
+.supercontainer{
+position:absolute;
+left:0;
+}
   
