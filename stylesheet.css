@@ -1,5 +1,6 @@
 .bigchart {
 position:static;
+left:0;
 }
 
 .piechart{
@@ -7,7 +8,6 @@ position:static;
 }
   
 .supercontainer{
-position:absolute;
-left:0;
+
 }
   
