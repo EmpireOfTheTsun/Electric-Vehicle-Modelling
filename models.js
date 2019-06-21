@@ -22,6 +22,19 @@ function view(algorithmType){
   resetGraphs();
   graph(resultsLine[algorithmType][0],resultsLine[algorithmType][1]);
   pieChart(resultsPie[algorithmType][0],resultsPie[algorithmType][1],resultsPie[algorithmType][2],resultsPie[algorithmType][3]);
+  var displayedString = "Current Algorithm: ";
+  var element = document.getElementById('AlgorithmDisplayer');
+  if (algorithmType == 0){
+    displayedString += "Greedy Allocation";
+  }
+  else if (algorithmType == 1){
+    displayedString += "Equal Contention";
+  }
+  else{
+    displayedString += "Value Density";
+  }
+  element.innerHTML = displayedString;
+
 }
 
 function submit(){
@@ -50,6 +63,10 @@ function submit(){
 
   buildModel(carCount, capacity, chargeRate, iterations);
   view(0); //populates chart with greedy
+  document.getElementById("button1").style.visibility='visible';
+  document.getElementById("button2").style.visibility='visible';
+  document.getElementById("button3").style.visibility='visible';
+
 }
 
 function resetGraphs(){
@@ -77,7 +94,7 @@ var minWaitPeriod = 3; //NB this is NOT scaled to real time. Be careful if you c
 var maxWaitPeriod = 8;
 var numberOfPeriods = 72; //36 hours
 var gaussianStrength = 20; //Higher = more gaussian distributed, but less performant.
-var successfulFuels = 0; //Fully fuelled TODO: These may have to be local
+var successfulFuels = 0; //Fully fuelled
 var partialSuccessfulFuels = 0; // >50% fuelled
 var unsuccessfulFuels = 0; // 0<x<50% fuelled
 var failedFuels = 0; //not fuelled at all
@@ -108,7 +125,7 @@ function buildModel(cars, capacity, chargeRate, iterations){
   }
   for(carCount = 0; carCount < carsTimeList.length; carCount++){
     for (temp = 0; temp < carsTimeList[carCount]; temp++){
-      var car = createCar(chargeRate, carCount); //TODO TEST ME
+      var car = createCar(chargeRate, carCount);
       carsList.push(car);
     }
   }
@@ -121,7 +138,7 @@ function buildModel(cars, capacity, chargeRate, iterations){
     for (count = 0; count < iterations; count++){
       var carsListClone = JSON.parse(JSON.stringify(carsList));
       //console.log("CLONED");
-      //console.log(carsListClone); //TODO CHECK OK
+      //console.log(carsListClone);
       runModel(carsTimeList, capacity, chargeRate, carsListClone, algorithmType);
     }
     averageResults(algorithmType);
@@ -338,7 +355,6 @@ function createElectricityRequirement(){
   return 4 + Math.ceil(Math.random()*16); //between 5 and 20 units
 }
 
-//TODO: Can improve this with proper distrib
 function createTimeRequirement(count){
   if (count < 0){
     count += scaledBaseLoad.length;
@@ -371,7 +387,7 @@ function createStartTime(){
   var index = 2 * sample(timeDistrib);
   if (Math.random() > 0.5){
     index++;
-  } //TODO: Test!
+  }
   return index;
 }
 

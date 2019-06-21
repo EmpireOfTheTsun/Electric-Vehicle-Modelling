@@ -5,7 +5,6 @@
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,maximum-scale=2">
-    <link rel="stylesheet" type="text/css" media="screen" href="/Electric-Vehicle-Modelling/assets/css/style.css?v=57d0eb78beb00a8067710a939a416e568217794f">
 
 <!-- Begin Jekyll SEO tag v2.5.0 -->
 <title>Electric Vehicle Electricity Consumption Model | An illustrative demonstration of the effects of different algorithms and infrastructure properties on the charging of electric vehicles.</title>
@@ -28,12 +27,10 @@
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
         <header class="inner">
-          <a id="forkme_banner" href="https://github.com/EmpireOfTheTsun/Electric-Vehicle-Modelling">View on GitHub</a>
-
           <h1 id="project_title">Electric Vehicle Electricity Consumption Model</h1>
           <h2 id="project_tagline">An illustrative demonstration of the effects of different algorithms and infrastructure properties on the charging of electric vehicles.</h2>
 
-          
+
         </header>
     </div>
 
@@ -48,10 +45,10 @@
   </head>
   <link href="stylesheet.css" rel="stylesheet" type="text/css">
   <body onload="loaded()">
-    <h1>Electric Vehicle Demo</h1>
+    <div class="evimge" ><img style="height:200px"; src="EVimg2.png" /></div>
+
     <form>
       <fieldset>
-        <legend>Properties</legend>
         <p>
           <label>Number of Households</label>
           <input type = "text"
@@ -62,13 +59,13 @@
           <label>EV Penetration (%)</label>
           <input type = "text"
                   id = "penetration"
-                  value = "25" />
+                  value = "40" />
         </p>
         <p>
           <label>Capacity (%)</label>
           <input type = "text"
                   id = "capacity"
-                  value = "120" />
+                  value = "115" />
           <label> Percentage of maximum baseload for # houses</label>
         </p>
         <p>
@@ -95,11 +92,13 @@
       <script src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
     </form>
     <button onclick="submit();" href="javascript:;">Run Algorithms</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <button onclick="view(0);" href="javascript:;">Greedy Allocation</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <button onclick="view(1);" href="javascript:;">Equal Contention</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <button onclick="view(2);" href="javascript:;">Value Density</button>
+    <button id="button1" onclick="view(0);" style="visibility:hidden;" href="javascript:;">Greedy Allocation</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <button id="button2" onclick="view(1);" style="visibility:hidden;" href="javascript:;">Equal Contention</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <button id="button3" onclick="view(2);" style="visibility:hidden;" href="javascript:;">Value Density</button>
+    <br>
+    <p style="font-size:20px; font-weight:bold" id="AlgorithmDisplayer">Current Algorithm: None</p>
 
-    <div style="clear:both; height:1000px;" class="supercontainer">
+    <div style="clear:both; height:450px;" class="supercontainer">
           <div id="canvas-holder"  style="height:400px; width:900px; float:left" class="bigchart">
     <canvas id="myChart" width="700" height="400"></canvas>
     </div>
@@ -110,7 +109,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-<!-- <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br> -->
 
   </body>
 </html>
@@ -121,13 +119,11 @@
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
-        
-        <p class="copyright">Electric Vehicle Electricity Consumption Model maintained by <a href="https://github.com/EmpireOfTheTsun">EmpireOfTheTsun</a></p>
-        
-        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+
+        <p class="copyright">Electric Vehicle Electricity Consumption Model maintained by <a href="https://github.com/EmpireOfTheTsun">Lewis Hill</a> for Enrico Gerding and Sebastian Stein at the University of Southampton.</p>
       </footer>
     </div>
 
-    
+
   </body>
 </html>

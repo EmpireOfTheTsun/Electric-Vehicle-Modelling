@@ -65,7 +65,17 @@ function stackedLineChart(baseLine, additionalElec, periodList, overLimit){
       // Can't just just `stacked: true` like the docs say
       scales: {
         yAxes: [{
+          scaleLabel:{
+            display:true,
+            labelString: "Energy Consumption (kW)"
+          },
           stacked: true,
+        }],
+        xAxes: [{
+          scaleLabel:{
+            display:true,
+            labelString: "Time"
+          }
         }]
       },
       animation: {
