@@ -28,10 +28,12 @@ function submit(){
   var houses = document.getElementById("houses").value;
   var penetration = document.getElementById('penetration').value;
   penetration = penetration / 100;
+  penetration = Math.min(200, penetration);
   var capacity = document.getElementById('capacity').value;
   var chargeRate = document.getElementById('chargerate').value;
   chargeRate = chargeRate * 36 / numberOfPeriods; //scales hours to periods
   var iterations = document.getElementById('iterations').value;
+  iterations = Math.min(300/penetration, iterations);
   var carCount = Math.round(houses * penetration * 1.5); //*1/5 because adding another 6h before and after model. It's not incredibly precise but it doesn't have to be
   pieChartThreshold = 1 - (document.getElementById('thresh').value / 100);
 
@@ -333,7 +335,7 @@ function createCar(chargeRate, timeStep){
 
 //DISCUSSION: We said uniform btw 1-20, but can we do better?
 function createElectricityRequirement(){
-  return 9 + Math.ceil(Math.random()*11); //between 11 and 20 units
+  return 4 + Math.ceil(Math.random()*16); //between 5 and 20 units
 }
 
 //TODO: Can improve this with proper distrib
