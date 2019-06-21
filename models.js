@@ -19,7 +19,9 @@ function toggleAdvanced(){
 }
 
 function view(algorithmType){
-  //TODO
+  resetGraphs();
+  graph(resultsLine[algorithmType][0],resultsLine[algorithmType][1]);
+  pieChart(resultsPie[algorithmType][0],resultsPie[algorithmType][1],resultsPie[algorithmType][2],resultsPie[algorithmType][3]);
 }
 
 function submit(){
@@ -42,12 +44,18 @@ function submit(){
   scaledMax = Math.max.apply(null,scaledBaseLoad);
   maximumCapacity = (capacity / 100) * scaledMax;
 
+  resetGraphs();
+
+  buildModel(carCount, capacity, chargeRate, iterations);
+  view(0); //populates chart with greedy
+}
+
+function resetGraphs(){
   var count; //Removes old charts
   for (count = chartsList.length -1; count > -1; count--){
     chartsList[count].destroy();
   }
   chartsList = [];
-  buildModel(carCount, capacity, chargeRate, iterations);
 }
 
 function loaded(){
@@ -76,48 +84,97 @@ var scaledBaseLoad = [];
 var scaledMax = 0;
 var maximumCapacity = 0;
 var pieChartThreshold = 50;
-var resultsGreedyLine = [];
-var resultsGreedyPie = [];
-var resultsEqualLine = [];
-var resultsEqualPie = [];
-var resultsDensityLine = []; //TODO: USE ME
-var resultsDensityPie = [];
+var resultsLine = [-1,-1,-1];
+var resultsPie = [-1,-1,-1];
+var tempResultsLine = [];
+var tempResultsPie = [];
+
 
 function buildModel(cars, capacity, chargeRate, iterations){
   var count;
-  for (count = 0; count < iterations; count++){
-    console.log("Iteration:"+count+1);
-    var carCount;
-    carCount = 0;
-    var timeCount;
-    var carsList = [];
-    var carsTimeList = [];
-    for (timeCount = 0; timeCount < numberOfPeriods; timeCount++){
-      carsTimeList.push(0);
+  var carCount;
+  carCount = 0;
+  var timeCount;
+  var carsList = [];
+  var carsTimeList = [];
+  for (timeCount = 0; timeCount < numberOfPeriods; timeCount++){
+    carsTimeList.push(0);
+  }
+  for(carCount = 0; carCount < cars; carCount++){
+    period = createStartTime();
+    carsTimeList[period]++;
+  }
+  for(carCount = 0; carCount < carsTimeList.length; carCount++){
+    for (temp = 0; temp < carsTimeList[carCount]; temp++){
+      var car = createCar(chargeRate, carCount); //TODO TEST ME
+      carsList.push(car);
     }
-    for(carCount = 0; carCount < cars; carCount++){
-      period = createStartTime();
-      carsTimeList[period]++;
-    }
-    for(carCount = 0; carCount < carsTimeList.length; carCount++){
-      for (temp = 0; temp < carsTimeList[carCount]; temp++)
-        var car = createCar(chargeRate, carsTimeList[carCount]); //TODO TEST ME
-        carsList.push(car);
-    }
-    console.log(carsTimeList);
+  }
+  console.log(carsTimeList);
 
-    var algorithmType;
-    for(algorithmType = 0; algorithmType < 3; algorithmType++){
+  var algorithmType;
+  for(algorithmType = 0; algorithmType < 3; algorithmType++){
+    tempResultsLine = [];
+    tempResultsPie = [];
+    for (count = 0; count < iterations; count++){
       var carsListClone = JSON.parse(JSON.stringify(carsList));
-      console.log("CLONED");
-      console.log(carsListClone); //TODO CHECK OK
+      //console.log("CLONED");
+      //console.log(carsListClone); //TODO CHECK OK
       runModel(carsTimeList, capacity, chargeRate, carsListClone, algorithmType);
     }
-
+    averageResults(algorithmType);
   }
+
 }
 
-function runModel(carsTimeList, capacity, chargeRate, carsList){
+function averageResults(algorithmType){
+  var count;
+  var elecUsageList = tempResultsLine[0][0];
+  var overLimitList = tempResultsLine[0][1];
+  var iterations = tempResultsLine.length;
+  for (count = 1; count < iterations; count++){
+    var listCount;
+    for (listCount = 0; listCount < 48; listCount++){
+      elecUsageList[listCount] += tempResultsLine[count][0][listCount];
+      overLimitList[listCount] += tempResultsLine[count][1][listCount];
+    }
+  }
+  elecUsageList = elecUsageList.map(function(x){
+    return x / iterations;
+  });
+  overLimitList = overLimitList.map(function(x){
+    return x / iterations;
+  });
+
+  var avgSuccess = 0;
+  var avgPartial = 0;
+  var avgUnsuccess = 0;
+  var avgFail = 0;
+
+  for (count = 0; count < iterations; count++){
+    avgSuccess += tempResultsPie[count][0];
+    avgPartial += tempResultsPie[count][1];
+    avgUnsuccess += tempResultsPie[count][2];
+    avgFail += tempResultsPie[count][3];
+  }
+  avgSuccess = avgSuccess / iterations;
+  avgPartial = avgPartial / iterations;
+  avgUnsuccess = avgUnsuccess / iterations;
+  avgFail = avgFail / iterations;
+
+  var sum = (avgSuccess+avgPartial+avgUnsuccess+avgFail)/100;
+
+
+  var avgLineResult =[elecUsageList, overLimitList];
+  var avgPieResult = [Math.round(avgSuccess/sum), Math.round(avgPartial/sum), Math.round(avgUnsuccess/sum), Math.round(avgFail/sum)];
+
+  console.log("Algo"+algorithmType+" Pie="+sum);
+
+  resultsLine[algorithmType] = avgLineResult;
+  resultsPie[algorithmType] = avgPieResult;
+}
+
+function runModel(carsTimeList, capacity, chargeRate, carsList, algorithmType){
   var timeStep;
   var currentCars = [];
   var electricityUsageOverTime = [];
@@ -132,7 +189,7 @@ function runModel(carsTimeList, capacity, chargeRate, carsList){
     var availableElec = maximumCapacity - baseLoadUsage;
     var electricityUsed = 0;
     var carCounter;
-    if (true){ //TODO replace with algorithmtype = 1,2,3
+    if (algorithmType == 2){
 
       //calculates value density for all cars
       for (carCounter = currentCars.length-1; carCounter >= 0; carCounter--){
@@ -160,8 +217,9 @@ function runModel(carsTimeList, capacity, chargeRate, carsList){
 
       electricityUsageOverTime.push(electricityUsed);
     }
+
     else{
-      var electricityPerCar = allocateElectricity(currentCars.length, availableElec, chargeRate);
+      var electricityPerCar = allocateElectricity(currentCars.length, availableElec, chargeRate, algorithmType);
       for (carCounter = currentCars.length-1; carCounter >= 0; carCounter--){ //allows splicing mid-loop
         car = currentCars[carCounter];
         electricityUsed += Math.min(electricityPerCar, car.remainingElectricity); //Car only uses electricity up to its capacity
@@ -173,13 +231,22 @@ function runModel(carsTimeList, capacity, chargeRate, carsList){
       electricityUsageOverTime.push(electricityUsed);
     }
   }
+  // var carCount;
+  // for (carCount = 0; carCount < currentCars.length; carCount++){
+  //   console.log("TEST");
+  //   var car = currentCars[carCount];
+  //   car.timeRemaining = 0;
+  //   carLeaving(car);
+  // }
   outputResults(electricityUsageOverTime);
 }
 
 //can swap this for other algorithms. Current is equal split
-function allocateElectricity(numCars, availableElec, chargeRate){
-  //return chargeRate;
-  return Math.min(chargeRate, (availableElec / numCars));
+function allocateElectricity(numCars, availableElec, chargeRate, algorithmType){
+  if (algorithmType == 0){
+    return chargeRate; //greedy
+  }
+  else return Math.min(chargeRate, (availableElec / numCars)); //equal contention
 }
 
 function valueDensity(amountNeeded, timeToDeparture, chargeRate, car){
@@ -217,10 +284,8 @@ function carLeaving(car){
 
 //DISCUSSION: Output successful chargings over time?
 function outputResults(electricityUsageOverTime){
-  //TODO: TRUNC
   electricityUsageOverTime.splice(0, 12);
   electricityUsageOverTime.splice(electricityUsageOverTime.length-12, 12);
-  console.log("Electricity Usage: "+electricityUsageOverTime);
   //shows where over Capacity
   var count;
   var overLimit = [];
@@ -231,8 +296,19 @@ function outputResults(electricityUsageOverTime){
       electricityUsageOverTime[count] -= amountOver; //allows for stacked graph to show correct value
     }
   }
-  graph(electricityUsageOverTime, overLimit);
-  pieChart(successfulFuels, partialSuccessfulFuels, unsuccessfulFuels, failedFuels);
+  var graphResults = [electricityUsageOverTime, overLimit];
+  tempResultsLine.push(graphResults);
+
+  var pieResults = [successfulFuels, partialSuccessfulFuels, unsuccessfulFuels, failedFuels];
+  tempResultsPie.push(pieResults);
+
+  successfulFuels = 0;
+  partialSuccessfulFuels = 0;
+  unsuccessfulFuels = 0;
+  failedFuels = 0;
+
+  //graph(electricityUsageOverTime, overLimit); NOTE THIS IS NOT CALLED ANYMORE
+  //pieChart(successfulFuels, partialSuccessfulFuels, unsuccessfulFuels, failedFuels);
 }
 
 function getScaledBaseLoad(count){
