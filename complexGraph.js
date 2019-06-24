@@ -1,10 +1,9 @@
+//This file contains the complex stacked line graph code to declutter the main file a little.
 
 function stackedLineChart(baseLine, additionalElec, periodList, overLimit){
   var ctx = document.getElementById('myChart').getContext('2d');
 
-
-
-  const colors = {
+  const colors = { // hex codes for various colours if you want to change without much hassle
     green: {
       fill: '#e0eadf',
       stroke: '#5eb84d',
@@ -29,9 +28,9 @@ function stackedLineChart(baseLine, additionalElec, periodList, overLimit){
   var myChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: periodList,
+      labels: periodList, //x-axis labels for the times
       datasets: [{
-        label: "Baseline",
+        label: "Baseline", //Data and colours for baseline energy consumption line
         fill: true,
         backgroundColor: colors.purple.fill,
         pointBackgroundColor: colors.purple.stroke,
@@ -41,7 +40,7 @@ function stackedLineChart(baseLine, additionalElec, periodList, overLimit){
         data: baseLine,
 
       }, {
-        label: "Additional EV Impact",
+        label: "Additional EV Impact", //Data/colours for the EV impact on the transformer, excluding impact above capacity
         fill: true,
         backgroundColor: colors.darkBlue.fill,
         pointBackgroundColor: colors.darkBlue.stroke,
@@ -50,7 +49,7 @@ function stackedLineChart(baseLine, additionalElec, periodList, overLimit){
         borderCapStyle: 'butt',
         data: additionalElec,
       }, {
-        label: "Over Capacity",
+        label: "Over Capacity", //Data/colours for EV impact above capacity
         fill: true,
         backgroundColor: colors.red.fill,
         pointBackgroundColor: colors.red.stroke,
@@ -61,20 +60,19 @@ function stackedLineChart(baseLine, additionalElec, periodList, overLimit){
       }]
     },
     options: {
-      responsive: false,
-      // Can't just just `stacked: true` like the docs say
+      responsive: false, //Prevents resiving to keep graph display and format consistent
       scales: {
         yAxes: [{
           scaleLabel:{
             display:true,
-            labelString: "Energy Consumption (kW)"
+            labelString: "Energy Consumption (kW)" //y-axis label
           },
-          stacked: true,
+          stacked: true, //Causes the values to be added on top of each other
         }],
         xAxes: [{
           scaleLabel:{
             display:true,
-            labelString: "Time"
+            labelString: "Time" //x-axis label
           }
         }]
       },
@@ -84,25 +82,4 @@ function stackedLineChart(baseLine, additionalElec, periodList, overLimit){
     }
   });
   return myChart;
-}
-
-function old(){
-  new Chart(ctx, {
-    // The type of chart we want to create
-    type: 'bar',
-
-    // The data for our dataset
-    data: {
-        labels: periodList,
-        datasets: [{
-            label: 'Energy Usage Over Time',
-            backgroundColor: 'rgb(255, 99, 132)',
-            borderColor: 'rgb(255, 99, 132)',
-            data: electricityUsageOverTime
-        }]
-    },
-
-    // Configuration options go here
-    options: {}
-  });
 }
