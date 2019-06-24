@@ -39,6 +39,10 @@ function submit(){
   penetration = penetration / 100;
   penetration = Math.min(200, penetration);
   var capacity = document.getElementById('capacity').value;
+  if (capacity < 100){
+    alert("Capacity must be over 100 to allow for the baseline energy consumption.");
+    return;
+  }
   var chargeRate = document.getElementById('chargerate').value;
   chargeRate = chargeRate * 36 / numberOfPeriods; //scales hours to periods
   var iterations = document.getElementById('iterations').value;
@@ -212,8 +216,9 @@ function runModel(carsTimeList, capacity, chargeRate, carsList, algorithmType){
         car.density = valueDensity(car.remainingElectricity, car.timeRemaining, chargeRate, car).toFixed(4);
       }
       //Prioritises based on value density, or time remaining if tie.
-      currentCars.sort((car1, car2) => (car1.density < car2.density) ? -1 : (car1.density == car2.density) ? ((car1.timeRemaining > car2.timeRemaining) ? 1 : -1)  : 1);
-
+      currentCars.sort(function (car1, car2) {
+        return car1.density < car2.density ? -1 : car1.density == car2.density ? car1.timeRemaining > car2.timeRemaining ? 1 : -1 : 1;
+      });
       carCounter = 0;
       for (carCounter = currentCars.length-1; carCounter >= 0; carCounter--){ //allows splicing mid-loop
         car = currentCars[carCounter];
@@ -452,13 +457,18 @@ function baseLoad(houses){
 // draw a discrete sample (index) from a probability distribution (an array of probabilities)
 // probs will be rescaled to sum to 1.0 if the values do not already
 function sample(probs) {
-    const sum = probs.reduce((a, b) => a + b, 0)
-    if (sum <= 0) throw Error('probs must sum to a value greater than zero')
-    const normalized = probs.map(prob => prob / sum)
-    const sample = Math.random()
-    let total = 0
-    for (let i = 0; i < normalized.length; i++) {
-        total += normalized[i]
-        if (sample < total) return i
-    }
+  var sum = probs.reduce(function (a, b) {
+    return a + b;
+  }, 0);
+  if (sum <= 0) throw Error('probs must sum to a value greater than zero');
+  var normalized = probs.map(function (prob) {
+    return prob / sum;
+  });
+  var sample = Math.random();
+  var total = 0;
+  var i;
+  for ( i = 0; i < normalized.length; i++) {
+      total += normalized[i];
+      if (sample < total) return i;
+  }
 }
