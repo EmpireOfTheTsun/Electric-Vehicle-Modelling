@@ -1,129 +1,97 @@
-<!DOCTYPE html>
-<html lang="en-US">
-
+<!DOCTYPE html> <html lang="en-US">
   <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset='utf-8'> <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,maximum-scale=2">
 
-<!-- Begin Jekyll SEO tag v2.5.0 -->
-<title>Electric Vehicle Electricity Consumption Model | An illustrative demonstration of the effects of different algorithms and infrastructure properties on the charging of electric vehicles.</title>
-<meta name="generator" content="Jekyll v3.8.5" />
-<meta property="og:title" content="Electric Vehicle Electricity Consumption Model" />
-<meta property="og:locale" content="en_US" />
-<meta name="description" content="An illustrative demonstration of the effects of different algorithms and infrastructure properties on the charging of electric vehicles." />
-<meta property="og:description" content="An illustrative demonstration of the effects of different algorithms and infrastructure properties on the charging of electric vehicles." />
-<link rel="canonical" href="https://empireofthetsun.github.io/Electric-Vehicle-Modelling/" />
-<meta property="og:url" content="https://empireofthetsun.github.io/Electric-Vehicle-Modelling/" />
-<meta property="og:site_name" content="Electric Vehicle Electricity Consumption Model" />
-<script type="application/ld+json">
-{"@type":"WebSite","url":"https://empireofthetsun.github.io/Electric-Vehicle-Modelling/","name":"Electric Vehicle Electricity Consumption Model","description":"An illustrative demonstration of the effects of different algorithms and infrastructure properties on the charging of electric vehicles.","headline":"Electric Vehicle Electricity Consumption Model","@context":"http://schema.org"}</script>
-<!-- End Jekyll SEO tag -->
+  <title>Electric Vehicles: Why AI is necessary | An illustrative demonstration
+  of the effects of different algorithms and infrastructure properties on the
+  charging of electric vehicles.</title>
+  
+    <script type = "text/javascript" src="chart.js"></script>
+    <script type = "text/javascript" src = "models.js" ></script>
+    <script type ="text/javascript" src = "complexGraph.js" ></script>
+    <link href="stylesheet.css" rel="stylesheet" type="text/css">
 
   </head>
 
-  <body>
+  <body onload="loaded()">
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
         <header class="inner">
-          <h1 id="project_title">Electric Vehicle Electricity Consumption Model</h1>
-          <h2 id="project_tagline">An illustrative demonstration of the effects of different algorithms and infrastructure properties on the charging of electric vehicles.</h2>
-
-
+          <h1 id="project_title">Electric Vehicles: Why AI is necessary </h1>
+          <h2 id="project_tagline">An illustrative demonstration of the effects
+          of different algorithms and infrastructure properties on the charging
+          of electric vehicles.</h2>
         </header>
     </div>
 
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <!DOCTYPE HTML>
-<html lang = "en">
-  <head>
-    <title>Electric Vehicle Electricity Consumption Modelling</title>
-    <meta charset = "UTF-8" />
-  </head>
-  <link href="stylesheet.css" rel="stylesheet" type="text/css">
-  <body onload="loaded()">
-    <div class="evimge" ><img style="height:200px"; src="EVimg2.png" /></div>
+        
+    <div style="max-width:1000px">
+     <div id="evimg" ><img src="EVimg3.png" /></div>
 
-    <form>
-      <fieldset>
+    <div style="float:left">
+      <h2>Settings</h2>
+      <form style="padding-left:0" >
         <p>
-          <label>Number of Households</label>
-          <input type = "text"
-                 id = "houses"
-                 value = "100" />
+          <label>Number of Households</label> <input type = "text"
+                 id = "houses" value = "100" />
+        </p> <p>
+          <label>EV Penetration (%)</label> <input type = "text"
+                  id = "penetration" value = "40" />
+        </p> <p>
+          <label>Capacity w.r.t. baseload (%)</label> <input type = "text"
+                  id = "capacity" value = "110" />
+        </p> <p>
+          <label>Charging Rate (kW)</label> <input type = "text"
+                  id = "chargerate" value = "5" />
+        </p> <button type="button" onclick="toggleAdvanced();"
+        href="javascript:;">Show/Hide Advanced</button> <p id="iterationsBox"
+        style="display: none">
+          <label>Number of Trials</label> <input type = "text"
+                  id = "iterations" value = "1" />
+        </p> <p id="threshBox" style="display: none">
+          <label>Partial/Mostly Charged (%)</label> <input type = "text"
+                  id = "thresh" value = "75" />
         </p>
-        <p>
-          <label>EV Penetration (%)</label>
-          <input type = "text"
-                  id = "penetration"
-                  value = "40" />
-        </p>
-        <p>
-          <label>Capacity (%)</label>
-          <input type = "text"
-                  id = "capacity"
-                  value = "115" />
-          <label> Percentage of maximum baseload for # houses</label>
-        </p>
-        <p>
-          <label>Charging Rate (kW)</label>
-          <input type = "text"
-                  id = "chargerate"
-                  value = "5" />
-        </p>
-        <button type="button" onclick="toggleAdvanced();" href="javascript:;">Show/Hide Advanced</button>
-        <p id="iterationsBox" style="display: none">
-          <label>Number of Trials</label>
-          <input type = "text"
-                  id = "iterations"
-                  value = "1" />
-        </p>
-        <p id="threshBox" style="display: none">
-          <label>Partial/Mostly Charged Threshold (%)</label>
-          <input type = "text"
-                  id = "thresh"
-                  value = "50" />
-        </p>
-      </fieldset>
-      <script type = "text/javascript" src = "models.js" ></script>
-      <script src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
-    </form>
-    <button onclick="submit();" href="javascript:;">Run Algorithms</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <button id="button1" onclick="view(0);" style="visibility:hidden;" href="javascript:;">Greedy Allocation</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <button id="button2" onclick="view(1);" style="visibility:hidden;" href="javascript:;">Equal Contention</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <button id="button3" onclick="view(2);" style="visibility:hidden;" href="javascript:;">Value Density</button>
+    </form> </div> </div>
+    
+    <hr style="clear:both;"></hr>
+    
+    <button onclick="submit();">Run Algorithms</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <button id="button1" onclick="view(0);" style="visibility:hidden;">Greedy Allocation</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <button id="button2" onclick="view(1);" style="visibility:hidden;">Equal Contention</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <button id="button3" onclick="view(2);" style="visibility:hidden;">Value Density</button>
+    
     <br>
-    <p style="font-size:20px; font-weight:bold" id="AlgorithmDisplayer">Current Algorithm: None</p>
-
-    <div style="clear:both; height:450px;" class="supercontainer">
-          <div id="canvas-holder"  style="height:400px; width:900px; float:left" class="bigchart">
-    <canvas id="myChart" width="700" height="400"></canvas>
+    
+    <h2 id="AlgorithmDisplayer">Current Algorithm: None</h2>
+    <div style="clear:both"></div>
+    <div id="canvas-holder" style="float:left;" class="bigchart">
+        <canvas id="myChart" width="700" height="400"></canvas>
     </div>
-        <!--<div id="canvas-holder" style=" height:30%; width:35%; float:left; padding-top:6%">-->
-        <div id="canvas-holder2" style="height:400px; width:400px; float:left" class="piechart">
-    <canvas id="pieChart" width="400" height="400" class="piechart"></canvas>
+    <!--<div id="canvas-holder" style=" height:30%; width:35%; float:left;
+        padding-top:6%">-->
+    <div id="canvas-holder2" style="float:left;" class="piechart">
+        <canvas id="pieChart" width="400" height="400" class="piechart"></canvas>
     </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-
-  </body>
-</html>
-
-      </section>
+    
+    <div style="clear:both"></div>
+    </section>
     </div>
 
-    <!-- FOOTER  -->
+    <!-- FOOTER -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
 
-        <p class="copyright">Electric Vehicle Electricity Consumption Model maintained by <a href="https://github.com/EmpireOfTheTsun">Lewis Hill</a> for Enrico Gerding and Sebastian Stein at the University of Southampton.</p>
+        <p class="copyright">Electric Vehicle Electricity Consumption Model
+        maintained by <a href="https://github.com/EmpireOfTheTsun">Lewis
+        Hill</a> for Enrico Gerding and Sebastian Stein at the University of
+        Southampton.</p>
       </footer>
     </div>
-
-
   </body>
 </html>

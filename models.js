@@ -1,7 +1,3 @@
-var imported = document.createElement("script");
-imported.src = "complexGraph.js";
-document.getElementsByTagName("head")[0].appendChild(imported);
-
 function toggleAdvanced(){
   var iterations = document.getElementById('iterationsBox');
   var thresh = document.getElementById('threshBox');
